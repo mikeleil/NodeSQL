@@ -1,5 +1,5 @@
-const express = require('express');
-const databaseService = require('./services/databaseService');
+import express, { Request, Response } from 'express';
+import databaseService from './services/databaseService';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,9 +9,9 @@ app.use(express.json());
 // CRUD Operations
 
 // Create (INSERT)
-app.post('/items', (req, res) => {
+app.post('/items', (req: Request, res: Response) => {
   const { name } = req.body;
-  databaseService.createItem(name, (err, result) => {
+  databaseService.createItem(name, (err: Error, result: any) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -20,8 +20,8 @@ app.post('/items', (req, res) => {
 });
 
 // Read (SELECT)
-app.get('/items', (req, res) => {
-  databaseService.getItems((err, result) => {
+app.get('/items', (req: Request, res: Response) => {
+  databaseService.getItems((err: Error, result: any) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -30,10 +30,10 @@ app.get('/items', (req, res) => {
 });
 
 // Update (UPDATE)
-app.put('/items/:id', (req, res) => {
+app.put('/items/:id', (req: Request, res: Response) => {
   const { id } = req.params;
   const { name } = req.body;
-  databaseService.updateItem(id, name, (err, result) => {
+  databaseService.updateItem(id, name, (err: Error, result: any) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -42,9 +42,9 @@ app.put('/items/:id', (req, res) => {
 });
 
 // Delete (DELETE)
-app.delete('/items/:id', (req, res) => {
+app.delete('/items/:id', (req: Request, res: Response) => {
   const { id } = req.params;
-  databaseService.deleteItem(id, (err, result) => {
+  databaseService.deleteItem(id, (err: Error, result: any) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -56,4 +56,4 @@ app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-module.exports = app;
+export default app;
