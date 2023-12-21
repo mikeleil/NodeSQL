@@ -1,14 +1,9 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const databaseService = require('./services/databaseService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Create SQLite database and table
-const db = new sqlite3.Database('mydatabase.db');
-db.run('CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)');
-
-// Middleware for JSON parsing
 app.use(express.json());
 
 // CRUD Operations
@@ -16,21 +11,21 @@ app.use(express.json());
 // Create (INSERT)
 app.post('/items', (req, res) => {
   const { name } = req.body;
-  db.run('INSERT INTO items (name) VALUES (?)', [name], function (err) {
+  databaseService.createItem(name, (err, result) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json({ id: this.lastID, name });
+    res.json(result);
   });
 });
 
 // Read (SELECT)
 app.get('/items', (req, res) => {
-  db.all('SELECT * FROM items', (err, rows) => {
+  databaseService.getItems((err, result) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json({ items: rows });
+    res.json(result);
   });
 });
 
@@ -38,26 +33,25 @@ app.get('/items', (req, res) => {
 app.put('/items/:id', (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
-  db.run('UPDATE items SET name = ? WHERE id = ?', [name, id], function (err) {
+  databaseService.updateItem(id, name, (err, result) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json({ id: this.changes, name });
+    res.json(result);
   });
 });
 
 // Delete (DELETE)
 app.delete('/items/:id', (req, res) => {
   const { id } = req.params;
-  db.run('DELETE FROM items WHERE id = ?', [id], function (err) {
+  databaseService.deleteItem(id, (err, result) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json({ id: this.changes });
+    res.json(result);
   });
 });
 
-// Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
