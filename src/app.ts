@@ -6,50 +6,48 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// CRUD Operations
-
 // Create (INSERT)
-app.post('/items', (req: Request, res: Response) => {
-  const { name } = req.body;
-  databaseService.createItem(name, (err: Error, result: any) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+app.post('/items', async (req: Request, res: Response) => {
+  try {
+    const { name } = req.body;
+    const result = await databaseService.createItem(name);
     res.json(result);
-  });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Read (SELECT)
-app.get('/items', (req: Request, res: Response) => {
-  databaseService.getItems((err: Error, result: any) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json(result);
-  });
+app.get('/items', async (req: Request, res: Response) => {
+  try {
+    const items = await databaseService.getItems();
+    res.json(items);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Update (UPDATE)
-app.put('/items/:id', (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { name } = req.body;
-  databaseService.updateItem(id, name, (err: Error, result: any) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+app.put('/items/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+    const result = await databaseService.updateItem(id, name);
     res.json(result);
-  });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Delete (DELETE)
-app.delete('/items/:id', (req: Request, res: Response) => {
-  const { id } = req.params;
-  databaseService.deleteItem(id, (err: Error, result: any) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+app.delete('/items/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const result = await databaseService.deleteItem(id);
     res.json(result);
-  });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.listen(PORT, () => {
