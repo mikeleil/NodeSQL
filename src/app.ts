@@ -1,10 +1,20 @@
 import express, { Request, Response } from 'express';
-import databaseService from './services/databaseService';
+import DatabaseService from './services/DatabaseService';
+import initializeDatabase from './services/initializeDatabase';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const databaseService = new DatabaseService();
 
 app.use(express.json());
+
+// Initialize the database
+initializeDatabase().then(() => {
+  console.log('Database initialized');
+}).catch(err => {
+  console.error('Database initialization failed:', err);
+  process.exit(1);
+});
 
 // Create (INSERT)
 app.post('/items', async (req: Request, res: Response) => {
@@ -32,7 +42,7 @@ app.put('/items/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { name } = req.body;
-    const result = await databaseService.updateItem(id, name);
+    const result = await databaseService.updateItem(parseInt(id), name);
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -43,7 +53,7 @@ app.put('/items/:id', async (req: Request, res: Response) => {
 app.delete('/items/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const result = await databaseService.deleteItem(id);
+    const result = await databaseService.deleteItem(parseInt(id));
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
