@@ -1,68 +1,66 @@
-const sqlite3 = require('sqlite3').verbose();
+const { Client } = require('pg');
 
 class DatabaseService {
   constructor() {
-    this.db = new sqlite3.Database('mydatabase.db');
+    this.client = new Client({
+      user: 'michael',
+      host: 'localhost',
+      database: 'postgres',//posttest
+      password: 'admin',
+      port: 5432,
+    });
     this.initializeDatabase();
   }
 
-  initializeDatabase() {
-    return new Promise((resolve, reject) => {
-      this.db.run('CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)', (err) => {
-        if (err) reject(err);
-        resolve();
-      });
-    });
+  async initializeDatabase() {
+    try {
+      await this.client.connect();
+      await this.client.query(`
+        CREATE TABLE IF NOT EXISTS items (
+          id SERIAL PRIMARY KEY,
+          name TEXT
+        )
+      `);
+    } catch (error) {
+      throw error;
+    }
   }
 
-  createItem(name) {
-    return new Promise((resolve, reject) => {
-      this.db.run('INSERT INTO items (name) VALUES (?)', [name], function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve({ id: this.lastID, name });
-      });
-    });
+  async createItem(name) {
+    try {
+      const result = await this.client.query('INSERT INTO items (name) VALUES ($1) RETURNING id', [name]);
+      return { id: result.rows[0].id, name };
+    } catch (error) {
+      throw error;
+    }
   }
 
-  getItems() {
-    return new Promise((resolve, reject) => {
-      this.db.all('SELECT * FROM items', (err, rows) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve({ items: rows });
-      });
-    });
+  async getItems() {
+    try {
+      const result = await this.client.query('SELECT * FROM items');
+      return { items: result.rows };
+    } catch (error) {
+      throw error;
+    }
   }
 
-  updateItem(id, name) {
-    return new Promise((resolve, reject) => {
-      this.db.run('UPDATE items SET name = ? WHERE id = ?', [name, id], function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve({ id: this.changes, name });
-      });
-    });
+  async updateItem(id, name) {
+    try {
+      const result = await this.client.query('UPDATE items SET name = $1 WHERE id = $2 RETURNING id', [name, id]);
+      return { id: result.rows[0].id, name };
+    } catch (error) {
+      throw error;
+    }
   }
 
-  deleteItem(id) {
-    return new Promise((resolve, reject) => {
-      this.db.run('DELETE FROM items WHERE id = ?', [id], function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve({ id: this.changes });
-      });
-    });
+  async deleteItem(id) {
+    try {
+      const result = await this.client.query('DELETE FROM items WHERE id = $1 RETURNING id', [id]);
+      return { id: result.rows[0].id };
+    } catch (error) {
+      throw error;
+    }
   }
 }
 
 module.exports = new DatabaseService();
-
